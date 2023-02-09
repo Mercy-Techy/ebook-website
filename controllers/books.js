@@ -178,49 +178,49 @@ exports.removeFromCart = async (req, res, next) => {
 };
 
 exports.order = async (req, res, next) => {
-  // const reference = Number(req.body.reference);
-  // let user;
-  // if (req.admin) {
-  //   user = await adminUser.findById(req.userId).populate({
-  //     path: "cart",
-  //     populate: { path: "books", populate: { path: "book" } },
-  //   });
-  // } else {
-  //   user = await User.findById(req.userId).populate({
-  //     path: "cart",
-  //     populate: { path: "books", populate: { path: "book" } },
-  //   });
-  // }
-  // const resp = await fetch(
-  //   "https://api.paystack.co/transaction/verify/" + reference,
-  //   {
-  //     method: "GET",
-  //     headers: {
-  //       Authorization: "Bearer " + process.env.PAYSTACK,
-  //     },
-  //   }
-  // );
-  // const result = await resp.json();
-  // const data = result.data;
-  // if (Number(data.reference) === Number(reference) && result.status) {
-  //   if (data.status === "success") {
-  //     const order = new Order({
-  //       books: user.cart.books,
-  //       totalPrice: user.cart.totalPrice,
-  //       userId: user._id,
-  //     });
-  //     const savedOrder = await order.save();
-  //     console.log(savedOrder);
-  //     user.orders.push(savedOrder);
-  //     user.cart.books = [];
-  //     user.cart.totalPrice = 0;
-  //     await user.save();
-  //     return res.status(200).json({ order: savedOrder });
-  //   }
+  const reference = Number(req.body.reference);
+  let user;
+  if (req.admin) {
+    user = await adminUser.findById(req.userId).populate({
+      path: "cart",
+      populate: { path: "books", populate: { path: "book" } },
+    });
+  } else {
+    user = await User.findById(req.userId).populate({
+      path: "cart",
+      populate: { path: "books", populate: { path: "book" } },
+    });
+  }
+  const resp = await fetch(
+    "https://api.paystack.co/transaction/verify/" + reference,
+    {
+      method: "GET",
+      headers: {
+        Authorization: "Bearer " + process.env.PAYSTACK,
+      },
+    }
+  );
+  const result = await resp.json();
+  const data = result.data;
+  if (Number(data.reference) === Number(reference) && result.status) {
+    if (data.status === "success") {
+      const order = new Order({
+        books: user.cart.books,
+        totalPrice: user.cart.totalPrice,
+        userId: user._id,
+      });
+      const savedOrder = await order.save();
+      console.log(savedOrder);
+      user.orders.push(savedOrder);
+      user.cart.books = [];
+      user.cart.totalPrice = 0;
+      await user.save();
+      return res.status(200).json({ order: savedOrder });
+    }
     return res.status(422).json({ message: "Transaction Failed" });
-  // } else {
-  //   return res.status(500).json({ message: "Sorry there was an error" });
-  // }
+  } else {
+    return res.status(500).json({ message: "Sorry there was an error" });
+  }
 };
 
 exports.getOrder = async (req, res, next) => {
